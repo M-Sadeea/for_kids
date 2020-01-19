@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+    html {
+        background-color: #ccc;
+    }
+    body {
+        max-width: 600px;
+        margin: auto;
+        background-color: #fff;
+        min-height: 100vh;
+        font-size: 32px;
+        text-align: center;
+        padding-top: 50px;
+    }
+    button {
+        font-size: 1em;
+        padding: 10px 20px;
+        margin: 20px 5px;
+    }
+    #result {
+        font-size: 1em;
+        padding: 10px;
+        width: calc(100% - 40px);
+        display: block;
+        margin: 20px;
+    }
+    .skipped {
+            background-color: rgb(255, 179, 179);
+            padding: 10px;
+            border-radius: 7px;
+            display: inline-block;
+            margin: 5px;
+            font-size: 0.8em;
+            position: relative;
+        }
+        .skipped:after {
+            content: attr(data-title);
+            position: absolute;
+            bottom: 110%;
+            left:-33%;
+            width: 150%;
+            font-size: 0.8em;
+            background-color: rgba(0,0,0,0.95);
+            padding: 5px;
+            border-radius: 5px;
+            color: #fff;
+            display: none;
+        }
+        .skipped:hover:after {
+            display: block;
+        }
+        .answer{
+            display: none;
+        }
+        .SMR .answer{
+            display: flex;
+        }
+        .SMR #result{
+            display: none;
+        }
+        .answer span:nth-child(2n){
+            flex-grow: 1
+        }
+        .answer span:nth-child(2n) input{
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="mal()">Mal</button>
+    <button onclick="division()">Geteilt</button>
+    <button onclick="add()">Plus</button>
+    <button onclick="subtract()">Minus</button>
+    <button onclick="division_mit_rest()">Geteilt mit Rest</button>
+
+    <input id="result" type="number">
+    <div class="answer">
+        <span>E:</span><span><input type="number" min="0" max="9" id="result1"></span>
+        <span>R:</span><span><input type="number" min="0" max="9" id="result2"></span>
+    </div>
+    <button onclick="check()">Prüfen</button>
+    <button onclick="repeate()">Wiederholen</button>
+    <br>
+    <br>
+    <div id="skipped"></div>
+</body>
+
+<script>
+    var speaker;
+    var skipped = document.getElementById('skipped');
+    try{
+        var speaker = new SpeechSynthesisUtterance();
+        speaker.lang = 'de-DE';
+    }
+    catch(e) {
+        
+    }
+    
+    var result, result1, result2, lastQuestion;
+    var resultEle = document.getElementById('result');
+    var result1Ele = document.getElementById('result1');
+    var result2Ele = document.getElementById('result2');
+
+    function repeate(){
+        reset();
+        try{speechSynthesis.speak(speaker);} catch(e){}
+    }
+    function check(){
+        if ((lastQuestion != 'SMR' && result == resultEle.value) ||
+           (lastQuestion == 'SMR' && result1 == result1Ele.value && result2 == result2Ele.value)) {
+            speaker.text = "Richtig!";
+        } else {
+            var cur = speaker.text;
+            speaker.text = "Falsch!";
+            if (lastQuestion == 'SMR') {
+                skipped.innerHTML = skipped.innerHTML + '<div class="skipped" data-title="e : '+result1+' | r : '+ result2 + '">' + cur + '</div>';
+            } else {
+                skipped.innerHTML = skipped.innerHTML + '<div class="skipped" data-title="'+result+'">' + cur + '</div>';
+            }
+        }
+        speechSynthesis.speak(speaker);
+    }
+
+    function add(){
+        reset();
+        var n1 = Math.floor(Math.random() * 700) + 55;
+        var n2 = Math.floor(Math.random() * 400) + 55;
+        result = n1 + n2;
+        speaker.text = n1 + ' plus ' + n2;
+        speechSynthesis.speak(speaker);
+    }
+    function subtract(){
+        reset();
+        var n1=0, n2=0;
+        while (n2>=n1){
+            n1 = Math.floor(Math.random() * 700) + Math.floor(Math.random() * 255);
+            n2 = Math.floor(Math.random() * 455);
+        }
+        result = n1 - n2;
+        speaker.text = n1 + ' Minus ' + n2;
+        speechSynthesis.speak(speaker);
+
+    }
+    function mal(){
+        reset();
+        var n1 = Math.floor(Math.random() * 8) + 2;
+        var n2 = Math.floor(Math.random() * 8) + 2;
+        result = n1 * n2;
+        speaker.text = n1 + ' Mal ' + n2;
+        speechSynthesis.speak(speaker);
+    }
+    function division(){
+        reset();
+        var n1 = Math.floor(Math.random() * 8) + 2;
+        result = Math.floor(Math.random() * 8) + 2;
+        var n2 = n1 * result;
+        speaker.text = n2 + ' Durch ' + n1;
+        speechSynthesis.speak(speaker);
+    }
+    function division_mit_rest(){
+        lastQuestion = 'SMR';
+        result1Ele.value = '';
+        result2Ele.value = '';
+        document.body.classList.add('SMR');
+        var num1 = Math.floor(Math.random() * 8 + 2);
+        result1 = Math.floor(Math.random() * 8 + 2);
+        result2 = Math.floor(Math.random() * Math.min(num1,result1));
+        var res = num1 * result1 + result2;
+        console.log(res, num1 , result1 , result2);
+        speaker.text = res + ' Durch ' + num1;
+        speechSynthesis.speak(speaker);
+        result1Ele.focus();
+    }
+
+    resultEle.addEventListener('keydown', function(e){
+        if(e.keyCode == 13) check();
+    })
+    result1Ele.addEventListener('keydown', function(e){
+        if(e.keyCode == 13) check();
+    })
+    result2Ele.addEventListener('keydown', function(e){
+        if(e.keyCode == 13) check();
+    })
+    function reset(){
+        resultEle.value = '';
+        resultEle.focus();
+        document.body.classList.remove('SMR');
+        lastQuestion = null;
+    }
+
+</script>
+
+
+
+
+</html>

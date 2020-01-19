@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 36px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }
+
+        .btnCon {
+            font-size: 0;
+        }
+
+        .btn {
+            width: 33.33%;
+            padding: 20px;
+            background-color: #bbb;
+            display: inline-block;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        .noMobile .btn:hover {
+            background-color: #9c94ff;
+        }
+
+        .dblPnt.active {
+            animation: flash 1s linear infinite;
+        }
+
+        @keyframes flash {
+
+            from,
+            49% {
+                opacity: 0;
+            }
+
+            50%,
+            to {
+                opacity: 1;
+            }
+        }
+
+        .timer {
+            text-align: right;
+            font-size: 0.5rem;
+            padding: 10px 0;
+        }
+
+        .right {
+            background-color: #bbff94;
+        }
+
+        .wrong {
+            background-color: #ff94ab;
+        }
+
+        .disable {
+            pointer-events: none;
+            background-color: #ccc;
+            color: #999;
+        }
+
+        .answer button {
+            width: 40%;
+            height: 80px;
+            margin: 10px;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .skiped {
+            background-color: rgb(255, 179, 179);
+            padding: 10px;
+            border-radius: 7px;
+            display: inline-block;
+            margin: 5px;
+            font-size: 0.8em;
+            position: relative;
+        }
+
+        .skiped:after {
+            content: attr(data-title);
+            position: absolute;
+            bottom: 110%;
+            left: -33%;
+            width: 150%;
+            font-size: 0.8em;
+            background-color: rgba(0, 0, 0, 0.95);
+            padding: 5px;
+            border-radius: 5px;
+            color: #fff;
+            display: none;
+        }
+
+        .skiped:hover:after {
+            display: block;
+        }
+
+        .num {
+            max-width: 300px;
+            margin: 5px auto 20px;
+            position: relative;
+        }
+
+        .num span,
+        .num input {
+            display: inline-block;
+            margin: 0px;
+            font-size: 1em;
+            width: 1em;
+            text-align: center;
+            padding: 0;
+            /* border: 1px solid #000; */
+            position: relative;
+        }
+
+        .num1 span:nth-child(1):after,
+        .num1 span:nth-child(2):after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 40%;
+            font-size: 0.8em;
+        }
+
+        .num1 span:nth-child(1).clicked:after,
+        .num1 span:nth-child(2).clicked:after {
+            content: '|';
+        }
+
+        .num2 {
+            border-bottom: 1px solid #000;
+            margin-top: 40px;
+        }
+
+        .num2:after {
+            content: '-';
+            display: inline-block;
+            position: absolute;
+            left: 60px;
+        }
+    </style>
+</head>
+
+<body class="noMobile">
+    <div class="timer"><span class="min">10</span><span class="dblPnt">:</span><span class="sec">00</span></div>
+    <div class="num num1"><span>9</span><span>9</span><span>9</span></div>
+    <div class="num num2"><span>9</span><span>9</span><span>9</span></div>
+    <div id="result" class="num">
+        <span><input name="a1" id="a1" maxlength="1" tabindex="3"></span>
+        <!--
+     --><span><input name="a2" id="a2" maxlength="1" tabindex="2"></span>
+        <!--  
+     --><span><input name="a3" id="a3" maxlength="1" tabindex="1"></span>
+    </div>
+    <div class="answer">
+        <button id="check">Prüfen</button>
+        <button id="skip">überspringen</button>
+    </div>
+
+    <div class="finalRes"><span class="rightAns">0</span> richtig von <span class="totalQuestion">1</span></div>
+    <button onclick="newGame();">Neues Spiel</button>
+    <div id="skiped"></div>
+    <script>
+        var _rightAns = document.querySelector('.rightAns');
+        var _totalQuestion = document.querySelector('.totalQuestion');
+        var rightAns = 0;
+        var totalQuestion = 1;
+        var rightAnswerFromFirstTime = true;
+
+        var result = document.getElementById('result');
+        var min = document.querySelector('.min');
+        var sec = document.querySelector('.sec');
+        var dblPnt = document.querySelector('.dblPnt');
+
+var a1=document.querySelector('#a1');
+var a2=document.querySelector('#a2');
+var a3=document.querySelector('#a3');
+        var nums = [];
+        var num2;
+
+        function getNewQuestion() {
+            result.classList.remove('right');
+            result.classList.remove('wrong');
+            [].forEach.call(document.querySelectorAll('.disable'), function (el) {
+                el.classList.remove('disable');
+            });
+            result.classList.remove('wrong');
+            [].forEach.call(document.querySelectorAll('.clicked'), function (el) {
+                el.classList.remove('clicked');
+            });
+            _rightAns.textContent = rightAns;
+            _totalQuestion.textContent = totalQuestion++;
+            rightAnswerFromFirstTime = true;
+            nums = [];
+            nums.push(Math.ceil(Math.random() * 989 + 10));
+            nums.push(Math.ceil(Math.random() * 989 + 10));
+            nums.sort((a,b)=>a>b);
+
+            a1.value = '';
+            a2.value = '';
+            a3.value = '';
+            a3.focus();
+            fillSpans('.num1', nums[1])
+            fillSpans('.num2', nums[0])
+            res = nums[1] - nums[0];
+        }
+
+        function fillSpans(el, num) {
+            if (num < 10) {
+                num = '  ' + num;
+            } else if (num < 100) {
+                num = ' ' + num;
+            } else {
+                num = '' + num;
+            }
+            els = document.querySelector(el).children;
+            [].forEach.call(els, function(el, i){
+                el.innerHTML = num.charAt(i)
+            });
+        }
+
+
+
+        var btn = document.querySelector('#check');
+        var skip = document.querySelector('#skip');
+        var skiped = document.querySelector('#skiped');
+
+        skip.addEventListener('click', function () {
+            skiped.innerHTML = skiped.innerHTML + '<div class="skiped" data-title="' + res + '">' + nums[1] + ' - ' +
+                nums[0] + '</div>';
+            getNewQuestion();
+        });
+
+        btn.addEventListener('click', checkAnswer);
+        document.addEventListener('keydown', checkAnswer);
+
+        function checkAnswer(e) {
+            if (e.type == 'keydown') {
+                if (e.keyCode != 13) return;
+            }
+            let a = Number(a1.value) * 100 +  Number(a2.value) * 10 +  Number(a3.value);
+console.log(a, res);
+            if (res == a) {
+                result.classList.remove('wrong');
+                result.classList.add('right');
+                if (rightAnswerFromFirstTime) rightAns++;
+                setTimeout(getNewQuestion, 2000);
+            } else {
+                result.classList.add('wrong');
+                rightAnswerFromFirstTime = false;
+            }
+        }
+
+        getNewQuestion();
+
+        var time = 600000;
+        var timeToEnd, timeToEnd;
+        var interval;
+        newGame();
+
+        function newGame() {
+            timeToEnd = new Date();
+            timeToEnd = new Date(timeToEnd.getTime() + time);
+            btn.removeAttribute('disabled');
+            interval = setInterval(intevalFunction, 1000);
+            totalQuestion = 1;
+            rightAns = 0;
+            dblPnt.classList.add('active');
+            skiped.innerHTML = '';
+            getNewQuestion();
+        }
+
+        document.addEventListener('touchstart', removeOnMobileClass);
+
+        function removeOnMobileClass() {
+            document.removeEventListener('touchstart', removeOnMobileClass);
+            document.body.classList.remove('noMobile');
+        }
+
+        function intevalFunction() {
+            var tmp = new Date();
+            tmp = timeToEnd - tmp.getTime();
+            if (tmp < 0) {
+                clearInterval(interval);
+                btn.setAttribute('disabled', 'disabled');
+                dblPnt.classList.remove('active');
+                alert('Fertig!');
+                return;
+            }
+            tmp = new Date(tmp);
+            min.textContent = (tmp.getMinutes() < 10) ? '0' + tmp.getMinutes() : tmp.getMinutes();
+            sec.textContent = (tmp.getSeconds() < 10) ? '0' + tmp.getSeconds() : tmp.getSeconds();
+        }
+
+        document.querySelector('.num1 span:nth-child(1)').addEventListener('click', function () {
+            this.classList.toggle('clicked');
+        })
+
+        document.querySelector('.num1 span:nth-child(2)').addEventListener('click', function () {
+            this.classList.toggle('clicked');
+        })
+    </script>
+
+</body>
+
+</html>

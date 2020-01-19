@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <meta name="description" content="game to teach children how to say times" />
+    <meta name="keywords" content="game, clock, hour, play, speake, learn" />
+    <meta name="author" content="Sadeea" />
+    
+    <title>Uhr Zeiten</title>
+    <script src="../js/p5.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box;}
+        body {
+            padding: 20px;
+            font-family: sans-serif;
+        }
+        button {
+            min-width: 160px;
+            font-size: 18px;
+        }
+        select {
+            min-width: 150px;
+            font-size: 18px;
+        }
+        
+        .rightAnswer{
+            display: none;
+        }
+        .hidden {
+            display: none;
+        }
+        #notChrome {
+            text-align: center;
+            padding-top: 50px;
+        }
+        #notChrome img{
+            width: 40%;
+            min-width: 200px;
+            max-width: 350px;
+            height: 100%;
+        }
+        #notChrome p {
+            background-color: #fff;
+            margin: 30px auto;
+            width: 100%;
+            max-width: 600px;
+            padding: 50px;
+            text-align: center;
+        }
+        #isChrome {
+            position: absolute;
+            width: 600px;
+            top: 510px;
+            left: 50%;
+            -webkit-transform: translate(-50%);
+            transform: translate(-50%);
+        }
+        #isChrome button {
+            height: 40px;
+        }
+        #newTime {
+            margin-left: 20px;
+        }
+        input {
+            margin: 10px;
+            padding: 10px;
+        }
+        img#thumb {
+            position: absolute;
+            width: 400px;
+            top: 20px;
+            left: calc(50% - 200px);
+            pointer-events: none;
+            -webkit-transform-origin: center center;
+            transform-origin: center center;
+            -webkit-transform: scale(0);
+            transform: scale(0);
+        }
+        img#thumb.animate {
+            -webkit-animation: showThumb 400ms both;
+            animation: showThumb 400ms both;
+        }
+        @-webkit-keyframes showThumb {
+            from { -webkit-transform: scale(0); transform: scale(0);}
+            85% { -webkit-transform: scale(1.1); transform: scale(1.1);}
+            to   { -webkit-transform: scale(1); transform: scale(1);}
+        }
+        @keyframes showThumb {
+            from { -webkit-transform: scale(0); transform: scale(0);}
+            85% { -webkit-transform: scale(1.1); transform: scale(1.1);}
+            to   { -webkit-transform: scale(1); transform: scale(1);}
+        }
+        canvas {
+            position: absolute;
+            width: 400px;
+            top: 0;
+            left: 50%;
+            -webkit-transform: translate(-50%);
+            transform: translate(-50%);
+            z-index: -1;
+        }
+        button#speake {
+            width: 50px;
+            min-width: 0;
+            border: none;
+            cursor: pointer;
+            height: 50px;
+            background: url(../images/microphone.png);
+            background-size: 80% 80%;
+            background-position: center center;
+            background-repeat:  no-repeat;
+        }
+        button#speake.big {
+            background-size: 100% 100%;
+        }
+        button#speake {
+            
+        }
+        #answer, #speake, #nummer, label[for="nummer"],#newTime{
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body  onmouseup="recognition.stop();">
+<div id="notChrome" class="hidden">
+    <img src="../images/sad_face.png" alt="sad face">
+    <p>es tut uns leid!<br>
+    Du musst <a href="https://www.google.com/chrome/browser/desktop/index.html">Chrome Browser</a> installieren, um dieses Spiel zu spielen </p>
+</div>
+<div id="isChrome">
+    <div>
+        <input type="text" autocomplete="" id="answer" name="q">
+        <button id="speake" type="button" onmousedown="Clear(); recognition.start(); this.classList.add('big');" title="klick und sprich"></button>
+        <input type="button" value="löchen" onclick="Clear()" hidden="hidden">
+        <input id="nummer" type="checkbox">
+        <label for="nummer">mit Nummer ? </label>
+        <button id="newTime">Neue Zeit</button>
+        <button id="lesen" hidden="hidden">Lesen!</button>
+    </div>
+    
+   <audio id="bravo" src="../audio/bravo.mp3"></audio>
+</div>
+<img id="thumb" src="../images/Thumbs_up.svg.png" alt="thumbUp">
+    <script>
+    try {
+        var recognition = new webkitSpeechRecognition();
+        recognition.lang = 'de-DE';
+        recognition.onresult = function(event) {
+          if (event.results.length > 0) {
+            answerBox.value = event.results[0][0].transcript;
+          }
+        }
+        recognition.onend = function(event) {
+            speake.classList.remove('big');
+            if (convertRes(answerBox.value) == currentTime){
+                rightAnswer();
+            }
+        }
+        var nummer = document.getElementById('nummer');
+        var newTime = document.getElementById('newTime');
+//        var check = document.getElementById('check');
+        var Hour = document.getElementById('Hour');
+        var Minut = document.getElementById('Minut');
+        var answerBox = document.getElementById('answer');
+        var bravo = document.getElementById('bravo');
+        var thumb = document.getElementById('thumb');
+        var lesen = document.getElementById('lesen');
+        var speake = document.getElementById('speake');
+        var dayTime;
+        var h;
+        var m;
+        var T;
+        var res ="";
+        
+        function drowBG(){
+            noStroke();
+            if (h>6&&h<18){
+                background('#f6bc76');
+                fill('#fc6f08');
+                ellipse(60,60,80,80);
+            } else {
+                background('#0c054d');
+                fill(255);
+                ellipse(60,60,80,80);
+                fill('#0c054d');
+                ellipse(80,40,80,80);
+            }
+        }
+        
+        function drowClock(){
+            drowBG();
+            push();
+            stroke(255);
+            fill(255);
+            angleMode(DEGREES);
+            translate(width/2,height/2);
+            ellipse(0,0,width/2,width/2);
+            
+            stroke(0);
+            for (var i=0; i<360; i=i+5){
+                if (i%30==0) {
+                    strokeWeight(4);
+                } else {
+                    strokeWeight(2);
+                }
+                line(130*sin(i),130*cos(i),145*sin(i),145*cos(i));
+            }
+            fill(0);
+            ellipse(0,0,10,10);
+            pop();
+            // Numbers
+            drowNumbers();
+            }
+        
+        function drowNumbers(){
+            var mitNummer = nummer.checked;
+            fill(165,35,89);
+            noStroke();
+            translate(width/2,height/2);
+            angleMode(DEGREES);
+            textAlign(CENTER);
+            
+            if (!mitNummer) {
+                return;
+            }
+            
+            textSize(16);
+            for (var i=1; i<=12; i++){
+                var a = 180-i*30;
+                 text(i,110*sin(a),110*cos(a)+5);
+//                 text(i+12,110*sin(a),110*cos(a)+5); // for Omar
+                 text(i*5,170*sin(a),170*cos(a)+5);
+            }
+        }
+        
+        function drowHour(h){
+            push();
+            angleMode(DEGREES);
+            rotate(180);
+            var dm = map(m,1,60,0,30)
+            rotate(30*h+dm);
+            stroke('#c31a20');
+            strokeWeight(6);
+            line(0,0,0,60);
+            rotate(180);
+            line(0,0,0,15);
+            pop();
+        }
+        
+        function drowMin(m){
+            push();
+            angleMode(DEGREES);
+            rotate(180);
+            rotate(6*m);
+            stroke('#4400dd');
+            strokeWeight(4);
+            line(0,0,0,90);
+            rotate(180);
+            line(0,0,0,15);
+            pop();
+        }
+        
+        function setup(){
+            createCanvas(600,500);
+            getNewTime();
+            frameRate(25);
+        }
+        var j=0;
+        var dh=12;
+        var dm = 0;
+        function draw(){
+            clear();
+            drowBG();
+            drowClock();
+            drowHour(dh);
+            drowMin(dm);
+            if(dh<h){ dh++ }
+            if(dh>h){ dh-- }
+            if(dm<m){ dm++ }
+            if(dm>m){ dm-- }
+        }
+        
+//        check.addEventListener('click',function(){
+//            console.log(Number(Hour.value)+12);
+//            if((Hour.value == h || Hour.value%12 == h || Number(Hour.value)+12==h) && (Minut.value == m)){
+//                bravo.play()
+//            }
+//        });
+        newTime.addEventListener('click',getNewTime)
+//        nummer.addEventListener('click',drowNumbers)
+        lesen.addEventListener('click',function(){
+            u.text =  currentTime + 'Uhr';
+            speechSynthesis.speak(u);
+        })
+
+        
+        function getNewTime(){
+            dayTime = random();
+            h = Math.floor(random(1,13));
+            m = Math.floor(random(0,11))*5 ;
+//            m = 0; // for Omar
+            T='AM';
+            if (dayTime<0.5) {
+                h+=12;
+                T='PM';
+            }
+            if (m<10) {m='0'+m;};
+            currentTime = h+':'+m;
+            console.log(currentTime);
+            res+=answerBox.value;
+            res+="|";
+            answerBox.value ="";
+        };
+        
+        
+         
+        
+//        function mouseClicked(){
+//           
+//        }
+            
+            function Clear(){
+                answerBox.value ="";
+            }
+    
+        function convertRes(res){
+            var resultH = '';
+            var resultM = 0;
+            var tmp = '';
+            res = res.toLowerCase();
+            res = res.replace('uhr', '');
+            res = res.trim();
+            
+            res = res.replace('viertel', '15');
+            
+            res = res.replaceAll('eins', '1');
+            res = res.replaceAll('ein', '1');
+            res = res.replaceAll('zwei', '2');
+            res = res.replaceAll('drei', '3');
+            res = res.replaceAll('vier', '4');
+            res = res.replaceAll('fünf', '5');
+            res = res.replaceAll('sechs', '6');
+            res = res.replaceAll('sieben', '7');
+            res = res.replaceAll('acht', '8');
+            res = res.replaceAll('neun', '9');
+            res = res.replaceAll('zehn', '10');
+            res = res.replaceAll('elf', '11');
+            res = res.replaceAll('zwölf', '12');
+            
+//            console.log('after replace : ('+ res+')');
+            
+            if (res.indexOf('halb')>=0){
+                tmp = res.substr(res.indexOf('halb')+4);
+                tmp = Number(tmp.trim()) - 1;
+                if (tmp == 0) { tmp = 12; };
+                resultH = tmp;
+                resultM = 30;
+            }
+            
+            if (res.indexOf('nach')>0){
+                if (resultH==''){
+                     if(res.indexOf(':')>-1){
+                        resultH = res.substring(res.indexOf('nach')+4,res.indexOf(':')).trim();
+                        resultM = Number(res.substring(res.indexOf(':')+1).trim());
+                     }
+                }
+                var mint = res.substr(0,res.indexOf('nach'));
+                mint = mint.trim();
+                resultM += Number(mint);
+                if (resultH == '') {
+                    resultH = res.substr(res.indexOf('nach')+4);
+                    resultH = resultH.trim();
+                }
+            }        
+            if (res.indexOf('vor')>0){
+                if (resultH==''){
+                     if(res.indexOf(':')>-1){
+                        resultH = res.substring(res.indexOf('vor')+3,res.indexOf(':')).trim();
+                        resultM = Number(res.substring(res.indexOf(':')+1).trim());
+                     }
+                }
+                var mint = res.substr(0,res.indexOf('vor'));
+                mint = Number(mint.trim());
+                if (resultM == 30 ) {
+                    resultM = 30 - mint
+                } else {
+                    resultM = 60 - mint;
+                }
+                if (resultH == '') {
+                    resultH = res.substr(res.indexOf('vor')+3);
+                    resultH = Number(resultH.trim())-1;
+                    if (resultH == 0) { resultH = 12; };
+                }
+            }
+            
+            if (resultH==''){
+                if(res.indexOf(':')>-1){
+                    resultH = res.substr(0,res.indexOf(':'));
+                    resultM = Number(res.substr(res.indexOf(':')+1));
+                } else {
+                    resultH = Number(res.trim());
+                }
+            }
+            
+            if (resultM < 10) resultM = '0' + resultM;
+            
+            return resultH+':'+resultM;
+        }
+        
+        function rightAnswer(){
+            bravo.play();
+            thumb.classList.add('animate');
+            setTimeout(function() {
+                thumb.classList.remove('animate')
+            }, 3000);
+        }
+        
+        
+        String.prototype.replaceAll = function(search, replacement) {
+            var target = this;
+            return target.replace(new RegExp(search, 'g'), replacement);
+        };
+        
+        
+         var u = new SpeechSynthesisUtterance();
+         u.lang = 'de-DE';
+     
+//     u.rate = 1.2;
+//     u.onend = function(event) { alert('Finished in ' + event.elapsedTime + ' seconds.'); }
+    }
+    catch(e) {
+        document.getElementById('notChrome').style.display = 'block';
+        document.getElementById('isChrome').style.display = 'none';
+    }
+        
+    </script>
+    
+</body>
+</html>

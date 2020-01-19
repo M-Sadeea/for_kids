@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyramidennummern</title>
+    <script src="../js/p5.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; overflow: hidden;}
+    </style>
+</head>
+
+<body style="padding:0; margin:0;">
+    <input id ="newGame" type="button" value="Neus Spiel"/>
+    <input id="input" type="number" id="input" />
+    <input id="range" type="range" min="1" max="10" value="1" />
+    <label id="rangeLabel" for="range">1</label>
+    <style>
+        body,
+        html {
+            padding: 0;
+            margin: 0;
+        }
+        
+        input, #rangeLabel {
+            background: #fcdfa7;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            height: 50px;
+            border: 0px;
+            padding: 20px;
+            line-height: 0;
+            border-radius: 10px;
+            font-size: 22px;
+            text-align: center;
+        }
+        #input {
+            display: none;
+            background: #7baaf0;
+            padding: 0;
+            border-radius: 0;
+        }
+        #range  {
+            height: 20px;
+            top: 70px;
+            padding: 5px;
+        }
+        #rangeLabel{
+            display: block;
+            top: 115px;
+            width: 150px;
+            height: 5px;
+            font-size: 26px;
+            text-align: center;
+            color: #fff;
+            background-color: #787878;
+        }
+        #rangeLabel:before {
+            content: 'Stufe: ';
+        }
+        canvas {
+            display: block;
+            margin: auto;
+        }
+    </style>
+    <script>
+        var bw;
+        var bh = 50;
+        var rows = [];
+        var input = document.getElementById('input');
+        var current_i, current_j;
+        var margin = 0;
+        var numberOfFields;
+        var difficulty = 10;
+        var keyboard = false;
+        
+        var kbWidth;
+        var kbHeight;
+        var keyWidth;
+        
+        numberOfFields = (window.innerWidth > 450) ? 10 : 5;
+
+        
+        
+        
+        
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            bw = (width - 50) / numberOfFields;
+            kbWidth = Math.max(200,Math.floor(windowWidth /3));
+            kbHeight = 150;
+            keyWidth = kbWidth / 4;
+            
+            if (localStorage && 'rows' in localStorage ) {
+            //Do something with--> localStorage.rows
+                rows = JSON.parse(localStorage["rows"]);
+            } else {
+            // Writing the value
+                generateNewGame()
+            }
+            input.style.width = bw + 'px';
+        }
+
+        function draw() {
+            background('#a5a9b1');
+            for (var j = 0; j < rows.length; j++) {
+                for (i = 0; i < rows[j].length; i++) {
+                    showBox(rows[j][i]);
+                }
+            }
+//            if (keyboard == true ) showKeyboard();
+        }
+
+        function generateNewGame(){
+            localStorage.removeItem('rows');
+            for (var j = 0; j < numberOfFields; j++) {
+                rows[j] = [];
+                for (i = 0; i < numberOfFields - j; i++) {
+                    rows[j].push(new Box(j, i));
+                }
+            }
+        }
+        
+        
+        function Box(i, j) {
+            this.x = i * bw + 25 + j * bw / 2;
+            this.y = height - bh - 5 - bh * j;
+            this.i = i;
+            this.j = j;
+
+            this.fillColor = '#fff';
+            this.value = '';
+            if (j == 0) this.value = Math.floor(random(difficulty));
+        }
+
+        function showBox(box) {
+            fill(box.fillColor);
+            rect(box.x, box.y, bw, bh);
+            textSize(22);
+            textAlign(CENTER);
+            fill('#0b5bd3')
+            text(box.value, box.x, box.y + 10, bw, bh - 10);
+        }
+
+        
+        function mousePressed() {
+            keyboard = false;
+            input.style.display = "none";
+            if (current_i) checkValue();
+            for (var j = 0; j < 10; j++) {
+                for (i = 0; i < rows[j].length; i++) {
+                    if (rows[i][j].x <= mouseX &&
+                        rows[i][j].x + bw > mouseX &&
+                        rows[i][j].y <= mouseY &&
+                        rows[i][j].y + bh > mouseY) {
+                        showInput(rows[i][j].x, rows[i][j].y, i, j);
+                        return;
+                    }
+                }
+            }
+        }
+
+        function showInput(x, y, i, j) {
+            if (j == 0) return;
+            keyboard = true;
+            current_i = i;
+            current_j = j;
+            console.log(current_i + ' , ' + current_j);
+            input.value = rows[current_i][current_j].value;
+            input.style.left = margin + x + "px";
+            input.style.top = y + "px";
+            input.style.display = "block";
+            input.focus();
+            input.setSelectionRange(0, input.value.length)
+        }
+
+        input.addEventListener('keyup', function (e) {
+            rows[current_i][current_j].value = Number(input.value) || '';
+            if (e.key == "Enter") {
+                input.style.display = "none";
+                checkValue();
+            }
+        })
+
+        document.getElementById('newGame').addEventListener('click',generateNewGame);
+        
+        var range = document.getElementById('range');
+        range.addEventListener('change',function(){
+            document.getElementById('rangeLabel').innerHTML = range.value;
+            difficulty = 10 * Number(range.value);
+        });
+        
+        function checkValue() {
+            if (rows[current_i][current_j].value != '' && current_j>0) {
+                if (rows[current_i][current_j].value == rows[current_i ][current_j-1].value + rows[current_i +1][current_j - 1].value) {
+                    rows[current_i][current_j].fillColor = '#c3fca7';
+                } else {
+                    rows[current_i][current_j].fillColor = '#fca7a7';
+                }
+            } else {
+                rows[current_i][current_j].fillColor = '#ffffff'
+            }
+            localStorage["rows"] = JSON.stringify(rows);
+        }
+        
+        function showKeyboard(){
+            var startX = Math.max(0,rows[current_i][current_j].x - kbWidth/2 + bw/2);
+            if (startX + kbWidth > windowWidth) startX = windowWidth - kbWidth-50;
+            var startY = (current_j>4)? rows[current_i][current_j].y + 2*bh : rows[current_i][current_j].y - kbHeight;
+            
+            
+            fill('rgba(0,0,0,0.5)');
+            rect(0, 0, windowWidth, windowHeight);
+            
+            fill('rgba(0,0,0,0.5)');
+            rect(startX, startY, kbWidth, kbHeight);
+            showBox(rows[current_i][current_j]);
+            
+            for (var i=0; i<12; i++){
+                fill('#7baaf0');
+                var x = (i%4)*keyWidth + startX;
+                var y = Math.floor(i/4)*bh + startY;
+                rect(x, y, keyWidth, bh);
+                textSize(22);
+                textAlign(CENTER);
+                fill('#0b5bd3');
+                text(i,x,y+10, keyWidth, bh-10);
+            }
+            
+            fill('red');
+            ellipse(startX+kbWidth+15,startY-15,30);
+            textAlign(CENTER);
+            fill('black');
+            text('X',startX+kbWidth+3,startY-7,30);
+        }
+        
+    </script>
+</body>
+
+</html>

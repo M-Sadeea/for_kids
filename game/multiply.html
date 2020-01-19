@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mal</title>
+    <style>
+        html,body{
+            background-color: #eee;
+            padding: 50px 0 0 0;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        .malCon {
+            max-width: 600px;
+            margin: auto;
+            background-color: #fff;
+            padding: 10px;
+        }
+        .btnsCon {
+            display: flex;
+        }
+        .btnsCon button {
+            width: 10%;
+            height: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .quesCon {
+            padding: 20px;
+            text-align: center;
+            
+        }
+        .quesCon {
+            font-size: 2rem
+        }
+        .ansCon {
+            text-align: center;
+        }
+        
+        #answer.right {
+            color: green;
+            border: 2px solid green;
+            fill: rgb(162, 255, 177);
+        }
+        
+        #answer.wrong {
+            color: red;
+            border: 2px solid red;
+            fill: rgb(255, 184, 162);
+        }
+        #answer{
+            text-align: center;
+            height: 80px;
+            font-size: 2rem;
+            width: 80%;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .ansCon button {
+            width: 40%;
+            display: inline-block;
+            height: 50px;
+            font-size: .8rem;
+            line-height: 1;
+        }
+        @media screen and (max-width: 450px) {
+            html, body {
+                font-size: 20px;
+                padding: 20px 0 0 0; 
+            }
+            .btnsCon {
+                flex-wrap: wrap;
+            }
+            .btnsCon button{
+                width: 20%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="malCon">
+        <div class="btnsCon">
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button>?</button>
+        </div>
+        <div class="quesCon">
+            <span id="baseSpan">1</span> . <span id="secondSpan">2</span> =
+        </div>
+        <div class="ansCon">
+            <input id="answer" type="number" autofocus ><br>
+            <button id="newQuestion">Neue Frage</button>
+            <button id="setAnswer">Antwort</button>
+        </div>
+    </div>
+
+
+    <script>
+        var base, second, answer=2;
+        var btns = document.querySelectorAll('.btnsCon button');
+        var ansCon = document.querySelector('.ansCon');
+        var baseSpan = document.getElementById('baseSpan');
+        var secondSpan = document.getElementById('secondSpan');
+        var newQuestion = document.getElementById('newQuestion');
+        var setAnswer = document.getElementById('setAnswer');
+        var answerEl = document.getElementById('answer');
+
+        function getRandomNumber(){
+            return Math.floor(Math.random() * 10);
+        }
+        function getNewQuestion(){
+           answerEl.classList.remove('right');
+           answerEl.classList.remove('wrong');
+           answerEl.value = '';
+           answerEl.focus();
+           
+            if (this.id === 'newQuestion') {
+                base = Number(baseSpan.textContent);
+            } else if (isNaN(Number(this.textContent))) {
+                base = getRandomNumber();
+            } else {
+                base = Number(this.textContent);
+            }
+            baseSpan.textContent = base;
+            second = getRandomNumber();
+            secondSpan.textContent = second;
+            answer = base * second;
+        }
+        function checkAnswer(){
+            answerEl.classList.remove('right');
+           answerEl.classList.remove('wrong');
+            if (answer && answer == Number(answerEl.value)) {
+                answerEl.classList.add('right');
+            } else {
+                answerEl.classList.add('wrong');
+            }
+        }
+        
+        
+
+        btns.forEach( function(el){
+            el.addEventListener('click', getNewQuestion);
+        })
+        newQuestion.addEventListener('click', getNewQuestion);
+        setAnswer.addEventListener('click', checkAnswer);
+        window.addEventListener('keydown',function(e){
+            if (e.keyCode == 13) checkAnswer();
+        })
+        window.onload = function() {
+            getNewQuestion();
+        }
+    </script>
+</body>
+</html>

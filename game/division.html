@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        html {
+            font-size: 36px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }
+        .question {
+            background-color: #cecece;
+            padding: 10px;
+        }
+        .btnCon{
+            font-size: 0;
+        }
+        .btn{
+            width: 33.33%;
+            padding: 20px;
+            background-color: #bbb;
+            display: inline-block;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .noMobile .btn:hover{
+            background-color: #9c94ff;
+        }
+        .dblPnt {
+            animation: flash 1s linear infinite;
+        }
+        @keyframes flash {
+            from, 49% { opacity: 0; }
+            50%, to { opacity: 1; }
+        }
+        .timer{
+            text-align: right;
+            font-size: 0.5rem;
+            padding: 10px 0;
+        }
+        .right { background-color: #bbff94; }
+        .wrong { background-color: #ff94ab; }
+        .disable { pointer-events: none; background-color: #ccc; color: #999; }
+        
+    </style>
+</head>
+<body class="noMobile">
+    <div class="timer"><span class="min">10</span><span class="dblPnt">:</span><span class="sec">00</span></div>
+    <div class="question"><span class="res">8</span> : <span class="factor1">2</span></div>
+    <div class="btnCon">
+        <div class="btn btn1">1</div>
+        <div class="btn btn2">2</div>
+        <div class="btn btn3">3</div>
+        <div class="btn btn4">4</div>
+        <div class="btn btn5">5</div>
+        <div class="btn btn6">6</div>
+        <div class="btn btn7">7</div>
+        <div class="btn btn8">8</div>
+        <div class="btn btn9">9</div>
+    </div>
+<div class="finalRes"><span class="rightAns">0</span> richtig von <span class="totalQuestion">1</span></div>
+<button onclick="newGame();">Neues Spiel</button>
+<script>
+    var _rightAns = document.querySelector('.rightAns');
+    var _totalQuestion = document.querySelector('.totalQuestion');
+    var rightAns = 0;
+    var totalQuestion = 1;
+    var rightAnswerFromFirstTime = true;
+
+    var min = document.querySelector('.min');
+    var sec = document.querySelector('.sec');
+    var question = document.querySelector('.question');
+    var _res = document.querySelector('.res');
+    var _factor1 = document.querySelector('.factor1');
+    var num1;
+    var num2;
+    var res;
+    
+    function getNewQuestion(){
+        question.classList.remove('right');
+        question.classList.remove('wrong');
+        [].forEach.call(document.querySelectorAll('.disable'), function(el){
+            el.classList.remove('disable');
+        });
+        _rightAns.textContent = rightAns;
+        _totalQuestion.textContent = totalQuestion++;
+        rightAnswerFromFirstTime = true;
+
+        num1 = Math.floor(Math.random() * 8 + 2);
+        num2 = Math.floor(Math.random() * 8 + 2);
+        res = num1 * num2;
+        _res.textContent = res;
+        _factor1.textContent = num1;
+    }
+    
+    var btns = document.querySelectorAll('.btn');
+    [].forEach.call(btns, function(btn){
+        btn.addEventListener('click', checkAnswer)
+    })
+    
+    function checkAnswer(){
+            var n = Number(this.textContent);
+            if (n === num2) {
+                question.classList.remove('wrong');
+                question.classList.add('right');
+                if (rightAnswerFromFirstTime) rightAns++;
+                setTimeout(getNewQuestion, 2000);
+            } else {
+                question.classList.add('wrong');
+                this.classList.add('disable');
+                rightAnswerFromFirstTime = false;
+            }
+        }
+
+    getNewQuestion();    
+
+    var time = 600000;
+    var timeToEnd = new Date();
+    timeToEnd =  new Date(timeToEnd.getTime() + time);
+    var interval = setInterval(function(){
+        var tmp = new Date();
+        tmp = timeToEnd - tmp.getTime();
+        if (tmp < 0 ) {
+            clearInterval(interval);
+            alert('Fertig!');
+            return;
+        }
+        tmp = new Date(tmp);
+        min.textContent = (tmp.getMinutes() < 10)? '0'+tmp.getMinutes() : tmp.getMinutes();
+        sec.textContent = (tmp.getSeconds()<10)? '0'+tmp.getSeconds() : tmp.getSeconds();
+    }, 1000);
+
+    function newGame(){
+        timeToEnd = new Date();
+        timeToEnd =  new Date(timeToEnd.getTime() + time);
+
+        totalQuestion = 1;
+        rightAns = 0;
+
+        getNewQuestion();
+    }
+
+    document.addEventListener('touchstart', removeOnMobileClass);
+    function removeOnMobileClass() {
+        document.removeEventListener('touchstart', removeOnMobileClass);
+        document.body.classList.remove('noMobile');
+    }
+</script>
+
+</body>
+</html>
